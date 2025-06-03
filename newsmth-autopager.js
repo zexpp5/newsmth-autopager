@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         水木社区自动加载前5页（兼容GBK, SPA支持）
+// @name         水木社区自动加载多页（自定义页数/SPA/GBK）
 // @namespace    https://www.newsmth.net/
-// @version      1.3
-// @description  自动加载水木社区文章前5页，解决乱码，兼容hashbang路由
+// @version      1.4
+// @description  自动加载水木社区文章前N页，支持SPA与GBK，页数可自定义
 // @author       GPT-4
 // @match        https://www.newsmth.net/nForum/*
 // @grant        none
@@ -11,6 +11,10 @@
 (function () {
     'use strict';
 
+    // ====== 只需修改下面这个参数 ======
+    const AUTOLOAD_PAGES = 10; // 想加载几页就写几页！
+
+    // ==== 以下无需修改 ====
     let lastArticleUrl = null;
 
     async function autoloadPages() {
@@ -46,19 +50,19 @@
             urls.push(location.href);
             for (let i = 0; i < links.length; i++) {
                 let url = links[i].href;
-                if (!urls.includes(url) && urls.length < 5) {
+                if (!urls.includes(url) && urls.length < AUTOLOAD_PAGES) {
                     urls.push(url);
                 }
             }
-            if (urls.length < 5) {
+            if (urls.length < AUTOLOAD_PAGES) {
                 let base = location.href.replace(/(\?|&)p=\d+/, '').replace(/#.*$/, '');
-                for (let p = 2; urls.length < 5; p++) {
+                for (let p = 2; urls.length < AUTOLOAD_PAGES; p++) {
                     let candidate = base + (base.includes('?') ? '&' : '?') + 'p=' + p;
                     if (!urls.includes(candidate)) urls.push(candidate);
                 }
             }
             console.log('[BBS-Autoload] 分页URL:', urls);
-            return urls.slice(0, 5);
+            return urls.slice(0, AUTOLOAD_PAGES);
         }
 
         function isAlreadyLoaded(url) {
@@ -99,7 +103,7 @@
         }
 
         let indicator = document.createElement('div');
-        indicator.textContent = '正在自动加载前5页……';
+        indicator.textContent = `正在自动加载前${AUTOLOAD_PAGES}页……`;
         indicator.style = 'padding:8px;color:#888;text-align:center;font-size:15px;';
         mainSection.appendChild(indicator);
 
@@ -117,7 +121,7 @@
             lastWrap = Array.from(mainSection.querySelectorAll('.a-wrap.corner')).pop();
         }
 
-        indicator.textContent = '前5页已加载完毕';
+        indicator.textContent = `前${AUTOLOAD_PAGES}页已加载完毕`;
         setTimeout(() => indicator.remove(), 2000);
         console.log('[BBS-Autoload] 所有页面加载完毕。');
     }
